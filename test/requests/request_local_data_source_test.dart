@@ -36,6 +36,28 @@ void main() {
     expect(outbox.single.idempotencyKey, 'abc');
   });
 
+  test(
+    'the save is atomic: if the outbox insert fails the request is rolled back',
+    () async {
+      final Database raw = await db.database;
+      await raw.execute('''
+        CREATE TRIGGER abort_outbox BEFORE INSERT ON outbox
+        BEGIN SELECT RAISE(ABORT, 'simulated outbox failure'); END;
+      ''');
+
+      bool threw = false;
+      try {
+        await local.saveWithOutbox(makeRequest(id: 'abc'));
+      } catch (_) {
+        threw = true;
+      }
+
+      expect(threw, isTrue);
+      expect(await local.list(), isEmpty);
+      expect(await local.pendingOutbox(), isEmpty);
+    },
+  );
+
   test('re-saving the same id never duplicates the outbox row', () async {
     await local.saveWithOutbox(makeRequest(id: 'abc'));
     await local.saveWithOutbox(makeRequest(id: 'abc'));
