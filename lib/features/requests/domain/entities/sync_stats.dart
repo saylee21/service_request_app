@@ -8,6 +8,7 @@ class SyncStats {
     this.lastSuccessAt,
     this.lastError,
     this.lastErrorAt,
+    this.dbVersion = 0,
   });
 
   final int pending;
@@ -17,6 +18,9 @@ class SyncStats {
   final DateTime? lastSuccessAt;
   final String? lastError;
   final DateTime? lastErrorAt;
+
+  /// Current SQLite schema version, shown on the diagnostics screen.
+  final int dbVersion;
 
   int get total => pending + syncing + failed + synced;
 

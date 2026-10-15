@@ -246,6 +246,7 @@ class RequestLocalDataSource {
           : DateTime.tryParse(lastSuccess),
       lastError: lastError,
       lastErrorAt: lastErrorAt,
+      dbVersion: AppDatabase.schemaVersion,
     );
   }
 }

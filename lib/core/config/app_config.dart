@@ -11,6 +11,9 @@ class AppConfig {
 
   final String apiBaseUrl;
 
+  /// Kept in step with `pubspec.yaml`; surfaced on the diagnostics screen.
+  static const String appVersion = '1.0.0+1';
+
   static const String _baseUrl = String.fromEnvironment('API_BASE_URL');
 
   /// False when the app was started without `--dart-define=API_BASE_URL=...`.
