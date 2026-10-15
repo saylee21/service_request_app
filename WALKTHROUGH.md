@@ -19,7 +19,8 @@ node server.js
 ```
 
 It listens on `:3000` and exposes a mode switch (`online | flaky | slow | down`)
-and a form-version switch (`?v=3`) at `http://localhost:3000/admin`.
+and a form-version switch (version 2 ↔ version 3) on the admin page at
+`http://localhost:3000/admin`.
 
 ## 2. Run the app
 
@@ -66,6 +67,9 @@ versa).
 Retries reuse the original `Idempotency-Key` (the request UUID), so a duplicate
 POST returns `200 duplicate` instead of creating two records.
 
+Talk track: a transient failure stops that drain run so a later request never
+overtakes an earlier one; a permanent `4xx` does not block the queue.
+
 ## 6. Permanent failure + manual retry
 
 Force a `4xx` (e.g. send an invalid value the server rejects): the request becomes
@@ -75,8 +79,10 @@ Force a `4xx` (e.g. send an invalid value the server rejects): the request becom
 
 - Request detail: status, submitted values (labelled via the **original form
   version**), and the **sync timeline** (attempt #, HTTP status, duration).
-- Diagnostics screen: outbox size, per-status counts, last success/error, and the
-  recent attempts log. **No field values are ever logged.**
+- Diagnostics screen: outbox size, per-status counts, last success/error, app +
+  schema version, a **copy logs** button, and the recent attempts log. **No field
+  values are ever logged.**
+- On the list, a **Failed** card shows the server message and a **Retry** action.
 
 ## 8. Schema migration (v2)
 
@@ -105,5 +111,5 @@ policy are testable without a device.
 
 ```bash
 flutter analyze
-flutter test          # 46 tests
+flutter test          # 54 tests
 ```

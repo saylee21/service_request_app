@@ -111,7 +111,7 @@ class AppDatabase {
   }
 
   /// v2: remember when the last sync attempt happened, so the detail screen can
-  /// show it and future backoff can survive a restart.
+  /// show it and the attempt counter continues after a restart.
   Future<void> _migrateV1toV2(Database db) async {
     await db.execute('ALTER TABLE requests ADD COLUMN last_attempt_at TEXT');
     AppLogger.d('DB migrated to schema v2 (requests.last_attempt_at)');
