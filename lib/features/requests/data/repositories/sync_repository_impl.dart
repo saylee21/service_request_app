@@ -153,6 +153,7 @@ class SyncRepositoryImpl implements SyncRepository {
             syncedAt: now,
             updatedAt: now,
             attempts: attemptsMade,
+            lastAttemptAt: now,
           );
           await _local.insertAttempt(
             SyncAttempt(
@@ -227,6 +228,7 @@ class SyncRepositoryImpl implements SyncRepository {
         clearServerMessage: true,
         updatedAt: now,
         attempts: attemptsMade,
+        lastAttemptAt: now,
       );
       await _local.insertAttempt(
         SyncAttempt(
@@ -257,6 +259,7 @@ class SyncRepositoryImpl implements SyncRepository {
       serverMessage: error.message,
       updatedAt: now,
       attempts: attemptsMade,
+      lastAttemptAt: now,
     );
     await _local.insertAttempt(
       SyncAttempt(

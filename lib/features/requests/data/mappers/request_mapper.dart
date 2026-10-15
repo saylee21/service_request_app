@@ -21,6 +21,7 @@ class RequestMapper {
     syncedAt: _dateOrNull(row['synced_at']),
     serverMessage: row['server_message'] as String?,
     attempts: (row['attempts'] as int?) ?? 0,
+    lastAttemptAt: _dateOrNull(row['last_attempt_at']),
   );
 
   static Map<String, Object?> toRow(ServiceRequest r) => <String, Object?>{
@@ -36,6 +37,7 @@ class RequestMapper {
     'synced_at': r.syncedAt?.toIso8601String(),
     'server_message': r.serverMessage,
     'attempts': r.attempts,
+    'last_attempt_at': r.lastAttemptAt?.toIso8601String(),
   };
 
   static SyncAttempt attemptFromRow(Map<String, Object?> row) => SyncAttempt(

@@ -11,7 +11,7 @@ class AppDatabase {
     : _factory = factory,
       _path = path;
 
-  static const int schemaVersion = 1;
+  static const int schemaVersion = 2;
   static const String fileName = 'service_requests.db';
 
   final DatabaseFactory? _factory;
@@ -34,6 +34,12 @@ class AppDatabase {
         },
         onCreate: (Database db, int version) async {
           await _createV1(db);
+          // Fresh installs run the same migrations so the schema has exactly one
+          // source of truth.
+          await _migrateV1toV2(db);
+        },
+        onUpgrade: (Database db, int oldVersion, int newVersion) async {
+          if (oldVersion < 2) await _migrateV1toV2(db);
         },
       ),
     );
@@ -102,6 +108,13 @@ class AppDatabase {
 
     await batch.commit(noResult: true);
     AppLogger.d('Database created at schema v1');
+  }
+
+  /// v2: remember when the last sync attempt happened, so the detail screen can
+  /// show it and future backoff can survive a restart.
+  Future<void> _migrateV1toV2(Database db) async {
+    await db.execute('ALTER TABLE requests ADD COLUMN last_attempt_at TEXT');
+    AppLogger.d('DB migrated to schema v2 (requests.last_attempt_at)');
   }
 
   Future<void> close() async {

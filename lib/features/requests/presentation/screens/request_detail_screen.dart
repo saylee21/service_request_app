@@ -75,6 +75,13 @@ class _DetailView extends StatelessWidget {
                   if (request.priority != null)
                     _MetaRow(label: 'Priority', value: request.priority!),
                   _MetaRow(label: 'Attempts', value: '${request.attempts}'),
+                  if (request.lastAttemptAt != null)
+                    _MetaRow(
+                      label: 'Last attempt',
+                      value: DateFormat(
+                        'd MMM yyyy, HH:mm:ss',
+                      ).format(request.lastAttemptAt!),
+                    ),
                   if (request.syncedAt != null)
                     _MetaRow(
                       label: 'Synced',

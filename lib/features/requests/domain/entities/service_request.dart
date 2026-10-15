@@ -17,6 +17,7 @@ class ServiceRequest {
     this.syncedAt,
     this.serverMessage,
     this.attempts = 0,
+    this.lastAttemptAt,
   });
 
   final String id;
@@ -32,12 +33,17 @@ class ServiceRequest {
   final String? serverMessage;
   final int attempts;
 
+  /// When the most recent sync attempt happened (nullable until the first try).
+  /// Added in schema v2.
+  final DateTime? lastAttemptAt;
+
   ServiceRequest copyWith({
     RequestStatus? status,
     DateTime? updatedAt,
     DateTime? syncedAt,
     String? serverMessage,
     int? attempts,
+    DateTime? lastAttemptAt,
     bool clearServerMessage = false,
   }) => ServiceRequest(
     id: id,
@@ -54,5 +60,6 @@ class ServiceRequest {
         ? null
         : (serverMessage ?? this.serverMessage),
     attempts: attempts ?? this.attempts,
+    lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
   );
 }

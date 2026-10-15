@@ -74,6 +74,7 @@ class RequestLocalDataSource {
     DateTime? updatedAt,
     DateTime? syncedAt,
     int? attempts,
+    DateTime? lastAttemptAt,
   }) async {
     final Database db = await _db.database;
     final Map<String, Object?> values = <String, Object?>{
@@ -84,6 +85,9 @@ class RequestLocalDataSource {
     if (updatedAt != null) values['updated_at'] = updatedAt.toIso8601String();
     if (syncedAt != null) values['synced_at'] = syncedAt.toIso8601String();
     if (attempts != null) values['attempts'] = attempts;
+    if (lastAttemptAt != null) {
+      values['last_attempt_at'] = lastAttemptAt.toIso8601String();
+    }
     await db.update(
       'requests',
       values,
