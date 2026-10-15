@@ -62,9 +62,38 @@ class _NewRequestViewState extends State<_NewRequestView> {
         }
       },
       builder: (BuildContext context, NewRequestState state) {
-        return Scaffold(
-          appBar: AppBar(title: const Text('New request')),
-          body: _body(context, state),
+        final bool dirty = state.values.isNotEmpty && !state.isSaved;
+        return PopScope(
+          canPop: !dirty,
+          onPopInvokedWithResult: (bool didPop, Object? result) async {
+            if (didPop) return;
+            final NavigatorState navigator = Navigator.of(context);
+            final bool? discard = await showDialog<bool>(
+              context: context,
+              builder: (BuildContext dialogContext) => AlertDialog(
+                title: const Text('Discard request?'),
+                content: const Text('Your changes will be lost.'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Keep editing'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: const Text('Discard'),
+                  ),
+                ],
+              ),
+            );
+            if (discard == true && navigator.mounted) navigator.pop();
+          },
+          child: Scaffold(
+            appBar: AppBar(title: const Text('New request')),
+            body: _body(context, state),
+            bottomNavigationBar: state.form == null
+                ? null
+                : _saveButton(context, state),
+          ),
         );
       },
     );
@@ -117,22 +146,30 @@ class _NewRequestViewState extends State<_NewRequestView> {
               ),
               const SizedBox(height: AppSpacing.lg),
             ],
-            const SizedBox(height: AppSpacing.sm),
-            FilledButton.icon(
-              onPressed: state.submitting
-                  ? null
-                  : () => context.read<NewRequestCubit>().submit(),
-              icon: state.submitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.check),
-              label: Text(state.submitting ? 'Saving…' : 'Save request'),
-            ),
             const SizedBox(height: AppSpacing.xxl),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _saveButton(BuildContext context, NewRequestState state) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: FilledButton.icon(
+          onPressed: state.submitting
+              ? null
+              : () => context.read<NewRequestCubit>().submit(),
+          icon: state.submitting
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.check),
+          label: Text(state.submitting ? 'Saving…' : 'Save request'),
         ),
       ),
     );
