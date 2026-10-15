@@ -173,7 +173,7 @@ class SyncRepositoryImpl implements SyncRepository {
           synced++;
           _bus.notify();
         } on AppException catch (error) {
-          await _handleFailure(
+          final bool stopQueue = await _handleFailure(
             request: request,
             error: error,
             attemptsMade: attemptsMade,
@@ -182,6 +182,10 @@ class SyncRepositoryImpl implements SyncRepository {
             onRetryScheduled: () => retryScheduled = true,
             onFailed: () => failed++,
           );
+          // A transient failure must not let later items overtake this one, so
+          // the drain stops and preserves FIFO order. A 4xx is permanent and
+          // does not block the rest of the queue.
+          if (stopQueue) break;
         }
       }
     } catch (error, stack) {
@@ -201,7 +205,10 @@ class SyncRepositoryImpl implements SyncRepository {
     );
   }
 
-  Future<void> _handleFailure({
+  /// Returns true when the drain should stop to preserve FIFO order (a
+  /// transient failure that will be retried), false when the queue may continue
+  /// (a permanent 4xx / budget exhaustion).
+  Future<bool> _handleFailure({
     required ServiceRequest request,
     required AppException error,
     required int attemptsMade,
@@ -248,7 +255,7 @@ class SyncRepositoryImpl implements SyncRepository {
       if (_scheduleRetries && delay != null) _scheduler.scheduleRetry(delay);
       onRetryScheduled();
       _bus.notify();
-      return;
+      return true;
     }
 
     // Gave up: either a 4xx (permanent) or the attempt/budget limit.
@@ -281,5 +288,6 @@ class SyncRepositoryImpl implements SyncRepository {
     );
     onFailed();
     _bus.notify();
+    return false;
   }
 }

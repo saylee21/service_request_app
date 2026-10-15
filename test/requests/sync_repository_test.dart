@@ -174,6 +174,23 @@ void main() {
     expect((await local.pendingOutbox()), isEmpty);
   });
 
+  test(
+    'a transient failure stops the queue so later items cannot overtake',
+    () async {
+      await local.saveWithOutbox(makeRequest(id: 'a'));
+      await local.saveWithOutbox(makeRequest(id: 'b'));
+      remote.enqueue(const NetworkException()); // a fails transiently
+      remote.enqueue(const SubmitOutcome(duplicate: false)); // b would succeed
+
+      final SyncSummary summary = summaryOf(await sync.syncPending());
+
+      expect(summary.retryScheduled, isTrue);
+      expect(remote.calls, 1, reason: 'b must not be sent before a succeeds');
+      expect((await local.byId('a'))!.status, RequestStatus.pending);
+      expect((await local.byId('b'))!.status, RequestStatus.pending);
+    },
+  );
+
   test('onStartup recovers a request stuck in syncing', () async {
     await local.saveWithOutbox(makeRequest(id: 'a'));
     await local.setStatus('a', RequestStatus.syncing);
