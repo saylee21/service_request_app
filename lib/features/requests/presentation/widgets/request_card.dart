@@ -8,10 +8,18 @@ import 'status_chip.dart';
 
 /// A single row in the requests list.
 class RequestCard extends StatelessWidget {
-  const RequestCard({super.key, required this.request, required this.onTap});
+  const RequestCard({
+    super.key,
+    required this.request,
+    required this.onTap,
+    this.onRetry,
+  });
 
   final ServiceRequest request;
   final VoidCallback onTap;
+
+  /// Shown as a Retry action when the request is [RequestStatus.failed].
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +90,18 @@ class RequestCard extends StatelessWidget {
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              if (request.status == RequestStatus.failed &&
+                  onRetry != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.xs),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text('Retry'),
+                  ),
                 ),
               ],
             ],

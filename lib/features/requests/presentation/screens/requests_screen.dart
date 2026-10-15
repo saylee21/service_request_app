@@ -97,7 +97,7 @@ class _RequestsView extends StatelessWidget {
               _FilterBar(state: state),
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () => context.read<RequestsCubit>().refresh(),
+                  onRefresh: () => context.read<RequestsCubit>().syncNow(),
                   child: _list(context, state),
                 ),
               ),
@@ -111,6 +111,12 @@ class _RequestsView extends StatelessWidget {
   Widget _list(BuildContext context, RequestsState state) {
     if (state.loading) {
       return const Center(child: CircularProgressIndicator());
+    }
+    if (state.requests.isEmpty && state.error != null) {
+      return _ErrorState(
+        message: state.error!,
+        onRetry: () => context.read<RequestsCubit>().refresh(),
+      );
     }
     if (state.requests.isEmpty) {
       return _EmptyState(filter: state.filter);
@@ -133,6 +139,7 @@ class _RequestsView extends StatelessWidget {
             return RequestCard(
               request: request,
               onTap: () => _openDetail(context, request),
+              onRetry: () => context.read<RequestsCubit>().retry(request.id),
             );
           },
         ),
@@ -212,6 +219,48 @@ class _EmptyState extends StatelessWidget {
               : 'Try another filter.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      children: <Widget>[
+        const SizedBox(height: AppSpacing.xxl),
+        Icon(
+          Icons.error_outline,
+          size: 56,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          'Could not load requests',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          message,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Center(
+          child: FilledButton.tonalIcon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try again'),
+          ),
         ),
       ],
     );
